@@ -1,17 +1,44 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Button } from "@workspace/ui/components/button";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { Input } from "@workspace/ui/components/input";
 
 export default function uploadNotes() {
+  const navigate = useNavigate();
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
-  const handleTextSubmit = () => {
+  const handleTextSubmit = async () => {
     if (!text.trim()) return;
 
-    console.log("Generate notes from text:", text);
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/notes/generate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to generate notes");
+      }
+
+      navigate("/notes", {
+        state: {
+          result: data,
+        },
+      });
+    } catch (error) {
+      console.error("Error generating notes:", error);
+    }
   };
 
   const handleFileSubmit = () => {
@@ -37,16 +64,14 @@ export default function uploadNotes() {
         </div>
 
         {/* Options */}
-        <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
+        <div className="flex justify-center">
+  <Card className="w-full max-w-2xl">
+    <CardHeader>
+      <CardTitle>Enter Text</CardTitle>
+    </CardHeader>
 
-          {/* Text */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Enter Text</CardTitle>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              <Textarea
+    <CardContent className="space-y-4">
+      <Textarea
                 placeholder="Paste or type your study material here..."
                 className="min-h-[260px] resize-none"
                 value={text}
@@ -62,55 +87,6 @@ export default function uploadNotes() {
               </Button>
             </CardContent>
           </Card>
-
-          {/* PDF */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload PDF</CardTitle>
-            </CardHeader>
-
-            <CardContent className="flex min-h-[320px] flex-col items-center justify-center gap-5">
-
-              <div className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted text-2xl">
-                  📄
-                </div>
-
-                <h3 className="font-medium">
-                  Upload your study material
-                </h3>
-
-                <p className="mt-1 text-sm text-muted-foreground">
-                  PDF files up to 10MB
-                </p>
-              </div>
-
-              <Input
-                type="file"
-                accept=".pdf,application/pdf"
-                className="cursor-pointer"
-                onChange={(e) => {
-                  setFile(e.target.files?.[0] || null);
-                }}
-              />
-
-              {file && (
-                <p className="text-sm text-muted-foreground">
-                  Selected: <span className="font-medium">{file.name}</span>
-                </p>
-              )}
-
-              <Button
-                className="w-full bg-blue-600 text-white hover:bg-blue-700"
-                onClick={handleFileSubmit}
-                disabled={!file}
-              >
-                Generate Notes
-              </Button>
-
-            </CardContent>
-          </Card>
-
         </div>
       </div>
     </main>
