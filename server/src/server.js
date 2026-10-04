@@ -1,15 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config();
-
 import express, { json } from "express";
 import cors from "cors";
-
-import connectDB from "./config/db.js";
-import authRoutes from "./routes/authRoutes.js";
+import notesRoutes from "./routes/routes.js";
 
 const app = express();
-
-connectDB();
 
 app.use(
     cors({
@@ -25,7 +20,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use("/api/auth", authRoutes);
+app.use("/api/notes", notesRoutes);
 
 const PORT = process.env.PORT || 5000;
 
